@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+        PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+
+<generatorConfiguration>
+    <!-- 数据库驱动路径（如果未在pom中配置依赖） -->
+    <!--Maven 项目优先使用本地仓库路径，无需手动指定驱动路径，只需在 pom.xml 中正确配置依赖-->
+    <!--默认可能位于 MySQL 安装目录的 lib 子目录下-->
+    <!-- 例如：C:\Program Files\MySQL\Connector J 8.0\mysql-connector-java-8.0.33.jar -->
+     <classPathEntry location="G:\MySQL\MySQL Installation\Connector J 5.1.25\mysql-connector-java-commercial-5.1.25-bin.jar"/>
+
+    <context id="mysqlTables" targetRuntime="MyBatis3">
+        <!-- 防止生成的SQL中自动添加分号 -->
+        <property name="autoDelimitKeywords" value="true"/>
+        <property name="beginningDelimiter" value="`"/>
+        <property name="endingDelimiter" value="`"/>
+
+        <!-- 生成的Java文件编码 -->
+        <property name="javaFileEncoding" value="UTF-8"/>
+
+        <!-- 注释配置 -->
+        <commentGenerator>
+            <property name="suppressAllComments" value="false"/>
+            <property name="suppressDate" value="true"/>
+        </commentGenerator>
+
+        <!-- 数据库连接配置 -->
+        <jdbcConnection
+                driverClass="com.mysql.jdbc.Driver"
+                connectionURL="jdbc:mysql://localhost:3306/largescale"
+                userId="root"
+                password="123456">
+        </jdbcConnection>
+
+        <!-- Java模型生成配置 -->
+        <javaModelGenerator
+                targetPackage="com.waxjx.largescale.model"
+                targetProject="src/main/java">
+            <property name="enableSubPackages" value="true"/>
+            <property name="trimStrings" value="true"/>
+        </javaModelGenerator>
+
+        <!-- SQL映射文件生成配置 -->
+        <sqlMapGenerator
+                targetPackage="mapper"
+                targetProject="src/main/resources">
+            <property name="enableSubPackages" value="true"/>
+        </sqlMapGenerator>
+
+        <!-- DAO接口生成配置 -->
+        <javaClientGenerator
+                type="XMLMAPPER"
+                targetPackage="com.waxjx.largescale.dao"
+                targetProject="src/main/java">
+            <property name="enableSubPackages" value="true"/>
+        </javaClientGenerator>
+
+        <!-- 指定要生成的表（示例生成users表） -->
+        <table
+                tableName="course"
+                domainObjectName="Course"
+                enableCountByExample="false"
+                enableUpdateByExample="false"
+                enableDeleteByExample="false"
+                enableSelectByExample="false"
+                selectByExampleQueryId="false">
+            <!-- 可选：忽略字段 -->
+            <!-- <ignoreColumn column="is_deleted"/> -->
+            <!-- 主键配置 -->
+            <!-- <generatedKey column="id" sqlStatement="MySQL" identity="true"/> -->
+        </table>
+
+        <table
+                tableName="curriculumplans"
+                domainObjectName="Curriculumplans"
+                enableCountByExample="false"
+                enableUpdateByExample="false"
+                enableDeleteByExample="false"
+                enableSelectByExample="false"
+                selectByExampleQueryId="false">
+        </table>
+
+        <table
+                tableName="curriculumplanscourse"
+                domainObjectName="Curriculumplanscourse"
+                enableCountByExample="false"
+                enableUpdateByExample="false"
+                enableDeleteByExample="false"
+                enableSelectByExample="false"
+                selectByExampleQueryId="false">
+        </table>
+
+        <table
+                tableName="grades"
+                domainObjectName="Grades"
+                enableCountByExample="false"
+                enableUpdateByExample="false"
+                enableDeleteByExample="false"
+                enableSelectByExample="false"
+                selectByExampleQueryId="false">
+        </table>
+
+        <table
+                tableName="student"
+                domainObjectName="Student"
+                enableCountByExample="false"
+                enableUpdateByExample="false"
+                enableDeleteByExample="false"
+                enableSelectByExample="false"
+                selectByExampleQueryId="false">
+        </table>
+
+        <table
+                tableName="teachers"
+                domainObjectName="Teachers"
+                enableCountByExample="false"
+                enableUpdateByExample="false"
+                enableDeleteByExample="false"
+                enableSelectByExample="false"
+                selectByExampleQueryId="false">
+        </table>
+    </context>
+</generatorConfiguration>
