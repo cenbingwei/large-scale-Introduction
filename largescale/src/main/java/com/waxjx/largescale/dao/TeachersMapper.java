@@ -3,6 +3,8 @@ package com.waxjx.largescale.dao;
 import com.waxjx.largescale.model.Teachers;
 import org.apache.ibatis.annotations.Mapper;
 
+import java.util.List;
+
 @Mapper
 public interface TeachersMapper {
     /**
@@ -52,4 +54,6 @@ public interface TeachersMapper {
      * @mbg.generated
      */
     int updateByPrimaryKey(Teachers record);
+
+    List<Teachers> selectAllTeachers();
 }

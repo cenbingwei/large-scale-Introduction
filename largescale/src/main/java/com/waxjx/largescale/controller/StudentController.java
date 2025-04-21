@@ -2,11 +2,9 @@ package com.waxjx.largescale.controller;
 
 import com.waxjx.largescale.model.Student;
 import com.waxjx.largescale.service.StudentService;
+import org.apache.ibatis.annotations.Delete;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -16,14 +14,37 @@ public class StudentController {
     @Autowired
     private StudentService studentService;
 
-    @RequestMapping("/largescale/student")
-    public Object getStudent() {
-        return studentService.getStudentById("S001");
+    @RequestMapping("/largescale/findStudentById")
+    public Object getStudent(String studentId) {
+        return studentService.getStudentById(studentId);
     }
 
     @GetMapping("largescale/findAllStudent")
     public List<Student> findAllStudent() {
         return studentService.findAllStudent();
     }
+
+    @PutMapping("largescale/updateStudent")
+    public int updateStudent(@RequestBody Student student) {
+        return studentService.updateStudent(student);
+    }
+
+    @PostMapping("largescale/insertStudent")
+    public int addStudent(@RequestBody Student student) {
+        return studentService.insertStudent(student);
+    }
+
+    @DeleteMapping("largescale/deleteStudent")
+    public int deleteStudent(String studentId) {
+        return studentService.deleteStudent(studentId);
+    }
+
+    @GetMapping("largescale/findStudentByStudentName")
+    public List<Student> findStudentsByStudentName(String studentName) {
+        return studentService.getStudentByStudentName(studentName);
+    }
+
+
+
 
 }

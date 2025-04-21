@@ -146,4 +146,10 @@
       remarks = #{remarks,jdbcType=VARCHAR}
     where teacherID = #{teacherid,jdbcType=VARCHAR}
   </update>
+
+  <select id="selectAllTeachers" resultType="com.waxjx.largescale.model.Teachers">
+    select * from teachers
+  </select>
+
+
 </mapper>

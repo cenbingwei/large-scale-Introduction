@@ -157,4 +157,44 @@
       and courseId = #{courseid,jdbcType=VARCHAR}
       and gradeId = #{gradeid,jdbcType=VARCHAR}
   </update>
+
+  <!-- 根据学生id删除成绩记录（删除对应学生的所有成绩） -->
+  <delete id="deleteGradesByStudentId" parameterType="String">
+    delete from grades where studentId = #{studentId}
+  </delete>
+
+<!--  根据学生id查询该学生所有成绩   -->
+  <select id="selectByStudentId" parameterType="String">
+    select * from grades where studentId = #{studentId}
+  </select>
+
+  <!-- 根据教师id 查询教师下所有课程的 所有学生成绩-->
+  <select id="selectByTeacherId" parameterType="String">
+    select * from grades where courseId in
+                               (select courseId from courses where teacherID = #{teacherId})
+
+  </select>
+
+<!--  根据课程id  查询成绩-->
+  <select id="selectByCourseId" parameterType="String">
+    select * from grades where courseId = #{courseId}
+  </select>
+
+<!--  依据学生id 和 课程id 修改对应成绩信息   -->
+  <update id="updateGradesByStudentIdCourseId" parameterType="com.waxjx.largescale.model.Grades">
+    update grades
+    set score = #{score,jdbcType=DOUBLE},
+        enrollmentStatus = #{enrollmentstatus,jdbcType=SMALLINT},
+        gpa = #{gpa,jdbcType=DOUBLE},
+        assessmentMethod = #{assessmentmethod,jdbcType=VARCHAR},
+        remarks = #{remarks,jdbcType=VARCHAR}
+    where studentId = #{studentid,jdbcType=VARCHAR}
+      and courseId = #{courseid,jdbcType=VARCHAR}
+  </update>
+
+<!--   依据学生id 和 课程id 删除对应的成绩信息   -->
+  <delete id="deleteGradesByStudentIdCourseId" parameterType="String">
+    delete from grades where studentId = #{studentId} and courseId = #{courseId}
+  </delete>
+
 </mapper>

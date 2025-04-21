@@ -23,4 +23,7 @@ public interface StudentMapper {
     // 新增查询所有学生的方法
     List<Student> selectAllStudents();   // 方法名按需定义
 
+    // 根据学生名字查询
+    List<Student> selectByStudentName(String studentName);
+
 }

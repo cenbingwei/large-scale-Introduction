@@ -37,6 +37,7 @@
     from student
     where studentId = #{studentid,jdbcType=VARCHAR}
   </select>
+
   <delete id="deleteByPrimaryKey" parameterType="java.lang.String">
     <!--
       WARNING - @mbg.generated
@@ -45,6 +46,7 @@
     delete from student
     where studentId = #{studentid,jdbcType=VARCHAR}
   </delete>
+
   <insert id="insert" parameterType="com.waxjx.largescale.model.Student">
     <!--
       WARNING - @mbg.generated
@@ -144,6 +146,7 @@
       </if>
     </trim>
   </insert>
+
   <update id="updateByPrimaryKeySelective" parameterType="com.waxjx.largescale.model.Student">
     <!--
       WARNING - @mbg.generated
@@ -187,6 +190,7 @@
     </set>
     where studentId = #{studentid,jdbcType=VARCHAR}
   </update>
+
   <update id="updateByPrimaryKey" parameterType="com.waxjx.largescale.model.Student">
     <!--
       WARNING - @mbg.generated
@@ -211,6 +215,11 @@
   <!-- 新增查询所有学生的SQL -->
   <select id="selectAllStudents" resultType="com.waxjx.largescale.model.Student">
     select * from student
+  </select>
+
+<!--  根据学生name来查询学生-->
+  <select id="selectByStudentName" parameterType="java.lang.String" resultType="com.waxjx.largescale.model.Student">
+    select * from student where studentName = #{studentName, jdbcType=VARCHAR}
   </select>
 
 

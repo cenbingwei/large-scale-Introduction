@@ -165,4 +165,6 @@ public class Grades extends GradesKey {
     public void setRemarks(String remarks) {
         this.remarks = remarks == null ? null : remarks.trim();
     }
+
+
 }

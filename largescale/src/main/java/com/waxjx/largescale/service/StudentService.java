@@ -1,5 +1,6 @@
 package com.waxjx.largescale.service;
 
+import com.waxjx.largescale.dao.GradesMapper;
 import com.waxjx.largescale.dao.StudentMapper;
 import com.waxjx.largescale.model.Student;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,8 @@ public class StudentService  {
 
     @Autowired
     private StudentMapper studentMapper;
+    @Autowired
+    private GradesMapper gradesMapper;
 
     /**
      * 根据学生 id 查询 学生信息
@@ -39,4 +42,27 @@ public class StudentService  {
         List<Student> students = studentMapper.selectAllStudents();
         return students;
     }
+
+    @Transactional
+    public int insertStudent(Student student) {
+        return studentMapper.insertSelective(student);
+    }
+
+    @Transactional
+    public int deleteStudent(String studentId) {
+        // System.out.println("1111111111111111111111111111111111");
+        // System.out.println(studentId);
+        /**
+         * 先删除对应学生的成绩信息
+         */
+        int count = gradesMapper.deleteGradesByStudentId(studentId);
+        // System.out.println(count);
+        // System.out.println("2222222222222222222222222222222222");
+        return studentMapper.deleteByPrimaryKey(studentId);
+    }
+
+    public List<Student> getStudentByStudentName(String studentName) {
+        return studentMapper.selectByStudentName(studentName);
+    }
+
 }
