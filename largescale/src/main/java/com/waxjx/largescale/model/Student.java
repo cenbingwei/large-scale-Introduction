@@ -1,6 +1,7 @@
 package com.waxjx.largescale.model;
 
-import java.util.Date;
+// import java.util.Date;
+import java.sql.Date;
 
 public class Student {
 
@@ -262,7 +263,6 @@ public class Student {
      * This method returns the value of the database column student.enrollmentDate
      *
      * @return the value of student.enrollmentDate
-     *
      * @mbg.generated
      */
     public Date getEnrollmentdate() {
