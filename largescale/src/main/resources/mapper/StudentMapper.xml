@@ -222,6 +222,63 @@
     select * from student where studentName = #{studentName, jdbcType=VARCHAR}
   </select>
 
+  <!-- 查询学生及其所有课程成绩信息（包含课程名称） -->
+  <select id="selectStudentGradesWithCourseInfo" resultType="java.util.Map">
+    SELECT 
+        s.studentId,
+        s.studentName,
+        c.courseName,
+        g.grade,
+        g.semester,
+        g.academicYear
+    FROM 
+        student s
+        LEFT JOIN grades g ON s.studentId = g.studentId
+        LEFT JOIN curriculumplanscourse cpc ON g.courseId = cpc.courseId
+        LEFT JOIN curriculumplans c ON cpc.curriculumPlanId = c.curriculumPlanId
+    WHERE 
+        s.studentId = #{studentId}
+    ORDER BY 
+        g.academicYear DESC, g.semester DESC
+  </select>
 
+  <!-- 查询每个班级的平均成绩和最高分学生信息 -->
+  <select id="selectClassAverageAndTopStudent" resultType="java.util.Map">
+    WITH ClassStats AS (
+        SELECT 
+            s.administrativeClass,
+            AVG(g.grade) as avgGrade,
+            MAX(g.grade) as maxGrade
+        FROM 
+            student s
+            JOIN grades g ON s.studentId = g.studentId
+        GROUP BY 
+            s.administrativeClass
+    ),
+    TopStudents AS (
+        SELECT 
+            s.studentId,
+            s.studentName,
+            s.administrativeClass,
+            g.grade,
+            ROW_NUMBER() OVER (PARTITION BY s.administrativeClass ORDER BY g.grade DESC) as rank
+        FROM 
+            student s
+            JOIN grades g ON s.studentId = g.studentId
+    )
+    SELECT 
+        cs.administrativeClass as class,
+        cs.avgGrade as averageGrade,
+        ts.studentId as topStudentId,
+        ts.studentName as topStudentName,
+        ts.grade as topStudentGrade
+    FROM 
+        ClassStats cs
+        JOIN TopStudents ts ON cs.administrativeClass = ts.administrativeClass
+    WHERE 
+        ts.rank = 1
+    ORDER BY 
+        cs.avgGrade DESC
+  </select>
 
 </mapper>

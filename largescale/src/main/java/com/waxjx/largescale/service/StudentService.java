@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.Date;
 
 @Service
-public class StudentService  {
+public class    StudentService  {
 
     @Autowired
     private StudentMapper studentMapper;
