@@ -12,6 +12,7 @@ import javax.sql.DataSource;
 import java.io.*;
 import java.net.Socket;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Configuration
 public class DynamicDataSourceConfig {
@@ -84,34 +85,34 @@ public class DynamicDataSourceConfig {
              OutputStream out = socket.getOutputStream();
              BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
-                // 发送 stat 命令
-                out.write("stat".getBytes());
-                out.flush();
-                // 读取响应
-                // String response;
-                // while ((response = in.readLine()) != null) {
-                //     System.err.println(response);
-                // }
+            // 发送 stat 命令
+            out.write("stat".getBytes());
+            out.flush();
+            // 读取响应
+            // String response;
+            // while ((response = in.readLine()) != null) {
+            //     System.err.println(response);
+            // }
 
-             //  BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-             //  BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-             //
-             // // 发送 stat 命令（必须以 \r\n 结束）
-             // writer.write("stat\r\n");
-             // writer.flush();
-             //
-             String line;
-             // while (reader != null) {
-             //     System.err.println(reader.readLine());
-             // }
-             //
+            //  BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+            //  BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+            //
+            // // 发送 stat 命令（必须以 \r\n 结束）
+            // writer.write("stat\r\n");
+            // writer.flush();
+            //
+            String line;
+            // while (reader != null) {
+            //     System.err.println(reader.readLine());
+            // }
+            //
 
             // 读取响应
-             while ((line = in.readLine()) != null) {
-                 if (line.contains("Mode:")) {
-                     return line.split("Mode:")[1].trim();
-                 }
-             }
+            while ((line = in.readLine()) != null) {
+                if (line.contains("Mode:")) {
+                    return line.split("Mode:")[1].trim();
+                }
+            }
 
         } catch (Exception e) {
             System.err.println("无法连接 Zookeeper 或解析响应: " + e.getMessage());
@@ -197,22 +198,35 @@ public class DynamicDataSourceConfig {
         // 每次重新选主
         electAndUpdateMaster(client);
 
-
-        // 获取当前 Master 的数据库ip
         String masterIp = new String(client.getData().forPath("/config/db/master"));
-
-        // 从Zookeeper中获取数据库配置
-        String jdbcUrl = new String(client.getData().forPath("/config/db/" + masterIp + "/url"));
-        String username = new String(client.getData().forPath("/config/db/" + masterIp + "/username"));
-        String password = new String(client.getData().forPath("/config/db/" + masterIp + "/password"));
-
-        // 构造并返回 DataSource
-        HikariDataSource ds = new HikariDataSource();
-        ds.setJdbcUrl(jdbcUrl);
-        ds.setUsername(username);
-        ds.setPassword(password);
-
-        return ds;
+        // 主库
+        String masterUrl = new String(client.getData().forPath("/config/db/" + masterIp + "/url"));
+        String masterUser = new String(client.getData().forPath("/config/db/" + masterIp + "/username"));
+        String masterPwd = new String(client.getData().forPath("/config/db/" + masterIp + "/password"));
+        HikariDataSource masterDs = new HikariDataSource();
+        masterDs.setJdbcUrl(masterUrl);
+        masterDs.setUsername(masterUser);
+        masterDs.setPassword(masterPwd);
+         //从库
+        List<String> children = client.getChildren().forPath("/config/db");
+        List<DataSource> slaves = children.stream()
+                .filter(ip -> !ip.equals("master") && !ip.equals(masterIp) && !ip.equals("url") && !ip.equals("username") && !ip.equals("password"))
+                .map(ip -> {
+                    try {
+                        String url = new String(client.getData().forPath("/config/db/" + ip + "/url"));
+                        String user = new String(client.getData().forPath("/config/db/" + ip + "/username"));
+                        String pwd = new String(client.getData().forPath("/config/db/" + ip + "/password"));
+                        HikariDataSource ds = new HikariDataSource();
+                        ds.setJdbcUrl(url);
+                        ds.setUsername(user);
+                        ds.setPassword(pwd);
+                        return ds;
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .collect(Collectors.toList());
+        return new ReadWriteRoutingDataSource(masterDs, slaves);
     }
 
 
