@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import javax.sql.DataSource;
 import java.io.*;
 import java.net.Socket;
+import java.sql.Connection;
 import java.util.*;
 
 @Configuration
@@ -206,14 +207,51 @@ public class DynamicDataSourceConfig {
         String username = new String(client.getData().forPath("/config/db/" + masterIp + "/username"));
         String password = new String(client.getData().forPath("/config/db/" + masterIp + "/password"));
 
+
         // 构造并返回 DataSource
         HikariDataSource ds = new HikariDataSource();
         ds.setJdbcUrl(jdbcUrl);
         ds.setUsername(username);
         ds.setPassword(password);
+        ds.setConnectionTimeout(3000); // 设置连接超时时间为 3 秒
 
-        return ds;
+        // 尝试连接主数据库
+        try (Connection conn = ds.getConnection()){
+            System.out.println("主数据库连接成功！");
+            return ds;
+        }catch (Exception e){
+            System.err.println("主数据库连接失败，尝试连接从数据库...");
+            List<String> children = client.getChildren().forPath("/config/db");   // [101.37.38.162, 120.26.234.22, 47.122.84.149, master, password, url, username]
+            children.remove("password");
+            children.remove("url");
+            children.remove("username");
+            children.remove( new String(client.getData().forPath("/config/db/master")) );
+            children.remove("master");
+
+            for (String child : children) {
+                String slaveUrl = new String(client.getData().forPath("/config/db/" + child + "/url"));
+                String slaveUser = new String(client.getData().forPath("/config/db/" + child + "/username"));
+                String slavePwd = new String(client.getData().forPath("/config/db/" + child + "/password"));
+
+                HikariDataSource slaveDs = new HikariDataSource();
+                slaveDs.setJdbcUrl(slaveUrl);
+                slaveDs.setUsername(slaveUser);
+                slaveDs.setPassword(slavePwd);
+                slaveDs.setConnectionTimeout(3000);
+                try (Connection testConn = slaveDs.getConnection()) {
+                    System.out.println("连接从数据库 " + child + " 成功！");
+                    return slaveDs;
+                } catch (Exception ex) {
+                    System.err.println("连接从库 " + child + " 失败：" + ex.getMessage());
+                }
+            }
+            throw new RuntimeException("所有数据库连接失败！");
+        }
+
+
     }
+
+
 
 
 }
