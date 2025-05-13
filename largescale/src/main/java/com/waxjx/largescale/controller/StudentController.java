@@ -44,6 +44,16 @@ public class StudentController {
         return studentService.getStudentByStudentName(studentName);
     }
 
+    @GetMapping("largescale/getStudentGradesWithCourseInfo")
+    public List<Map<String, Object>> getStudentGradesWithCourseInfo(String studentId) {
+        return studentService.getStudentGradesWithCourseInfo(studentId);
+    }
+
+    @GetMapping("largescale/getClassAverageAndTopStudent")
+    public List<Map<String, Object>> getClassAverageAndTopStudent() {
+        return studentService.getClassAverageAndTopStudent();
+    }
+
 
 
 
