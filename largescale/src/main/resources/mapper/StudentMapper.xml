@@ -222,63 +222,63 @@
     select * from student where studentName = #{studentName, jdbcType=VARCHAR}
   </select>
 
-  <!-- 查询学生及其所有课程成绩信息（包含课程名称） -->
+  <!-- 查询学生及其所有课程成绩信息 -->
   <select id="selectStudentGradesWithCourseInfo" resultType="java.util.Map">
     SELECT 
         s.studentId,
         s.studentName,
         c.courseName,
-        g.grade,
-        g.semester,
-        g.academicYear
+        g.score as grade,
+        c.semesterOffered as semester,
+        c.credits,
+        g.assessmentMethod,
+        g.remarks
     FROM 
         student s
         LEFT JOIN grades g ON s.studentId = g.studentId
-        LEFT JOIN curriculumplanscourse cpc ON g.courseId = cpc.courseId
-        LEFT JOIN curriculumplans c ON cpc.curriculumPlanId = c.curriculumPlanId
+        LEFT JOIN courses c ON g.courseId = c.courseId
     WHERE 
         s.studentId = #{studentId}
     ORDER BY 
-        g.academicYear DESC, g.semester DESC
+        c.semesterOffered DESC
   </select>
 
   <!-- 查询每个班级的平均成绩和最高分学生信息 -->
   <select id="selectClassAverageAndTopStudent" resultType="java.util.Map">
-    WITH ClassStats AS (
-        SELECT 
-            s.administrativeClass,
-            AVG(g.grade) as avgGrade,
-            MAX(g.grade) as maxGrade
-        FROM 
-            student s
-            JOIN grades g ON s.studentId = g.studentId
-        GROUP BY 
-            s.administrativeClass
-    ),
-    TopStudents AS (
-        SELECT 
-            s.studentId,
-            s.studentName,
-            s.administrativeClass,
-            g.grade,
-            ROW_NUMBER() OVER (PARTITION BY s.administrativeClass ORDER BY g.grade DESC) as rank
-        FROM 
-            student s
-            JOIN grades g ON s.studentId = g.studentId
-    )
     SELECT 
-        cs.administrativeClass as class,
-        cs.avgGrade as averageGrade,
-        ts.studentId as topStudentId,
-        ts.studentName as topStudentName,
-        ts.grade as topStudentGrade
+        s.administrativeClass as class,
+        ROUND(AVG(g.score), 2) as averageGrade,
+        (
+            SELECT s2.studentId
+            FROM student s2
+            JOIN grades g2 ON s2.studentId = g2.studentId
+            WHERE s2.administrativeClass = s.administrativeClass
+            ORDER BY g2.score DESC
+            LIMIT 1
+        ) as topStudentId,
+        (
+            SELECT s2.studentName
+            FROM student s2
+            JOIN grades g2 ON s2.studentId = g2.studentId
+            WHERE s2.administrativeClass = s.administrativeClass
+            ORDER BY g2.score DESC
+            LIMIT 1
+        ) as topStudentName,
+        (
+            SELECT g2.score
+            FROM student s2
+            JOIN grades g2 ON s2.studentId = g2.studentId
+            WHERE s2.administrativeClass = s.administrativeClass
+            ORDER BY g2.score DESC
+            LIMIT 1
+        ) as topStudentGrade
     FROM 
-        ClassStats cs
-        JOIN TopStudents ts ON cs.administrativeClass = ts.administrativeClass
-    WHERE 
-        ts.rank = 1
+        student s
+        JOIN grades g ON s.studentId = g.studentId
+    GROUP BY 
+        s.administrativeClass
     ORDER BY 
-        cs.avgGrade DESC
+        averageGrade DESC
   </select>
 
 </mapper>

@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 public class StudentController {
@@ -44,14 +45,14 @@ public class StudentController {
         return studentService.getStudentByStudentName(studentName);
     }
 
-    @GetMapping("largescale/getStudentGradesWithCourseInfo")
-    public List<Map<String, Object>> getStudentGradesWithCourseInfo(String studentId) {
-        return studentService.getStudentGradesWithCourseInfo(studentId);
+    @GetMapping("largescale/selectStudentGradesWithCourseInfo")
+    public List<Map<String, Object>> selectStudentGradesWithCourseInfo(@RequestParam String studentId) {
+        return studentService.selectStudentGradesWithCourseInfo(studentId);
     }
 
-    @GetMapping("largescale/getClassAverageAndTopStudent")
-    public List<Map<String, Object>> getClassAverageAndTopStudent() {
-        return studentService.getClassAverageAndTopStudent();
+    @GetMapping("largescale/selectClassAverageAndTopStudent")
+    public List<Map<String, Object>> selectClassAverageAndTopStudent() {
+        return studentService.selectClassAverageAndTopStudent();
     }
 
 

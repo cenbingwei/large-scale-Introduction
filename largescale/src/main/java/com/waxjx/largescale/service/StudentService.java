@@ -130,4 +130,10 @@ public class    StudentService  {
         return studentMapper.selectByStudentName(studentName);
     }
 
+    public List<Map<String, Object>> selectStudentGradesWithCourseInfo(String studentId) {
+        return studentMapper.selectStudentGradesWithCourseInfo(studentId);
+    }
+    public List<Map<String, Object>> selectClassAverageAndTopStudent(){
+        return studentMapper.selectClassAverageAndTopStudent();
+    }
 }

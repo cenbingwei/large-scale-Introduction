@@ -222,6 +222,63 @@
     select * from student where studentName = #{studentName, jdbcType=VARCHAR}
   </select>
 
+  <!-- 查询学生及其所有课程成绩信息 -->
+  <select id="selectStudentGradesWithCourseInfo" resultType="java.util.Map">
+    SELECT 
+        s.studentId,
+        s.studentName,
+        c.courseName,
+        g.score as grade,
+        c.semesterOffered as semester,
+        c.credits,
+        g.assessmentMethod,
+        g.remarks
+    FROM 
+        student s
+        LEFT JOIN grades g ON s.studentId = g.studentId
+        LEFT JOIN courses c ON g.courseId = c.courseId
+    WHERE 
+        s.studentId = #{studentId}
+    ORDER BY 
+        c.semesterOffered DESC
+  </select>
 
+  <!-- 查询每个班级的平均成绩和最高分学生信息 -->
+  <select id="selectClassAverageAndTopStudent" resultType="java.util.Map">
+    SELECT 
+        s.administrativeClass as class,
+        ROUND(AVG(g.score), 2) as averageGrade,
+        (
+            SELECT s2.studentId
+            FROM student s2
+            JOIN grades g2 ON s2.studentId = g2.studentId
+            WHERE s2.administrativeClass = s.administrativeClass
+            ORDER BY g2.score DESC
+            LIMIT 1
+        ) as topStudentId,
+        (
+            SELECT s2.studentName
+            FROM student s2
+            JOIN grades g2 ON s2.studentId = g2.studentId
+            WHERE s2.administrativeClass = s.administrativeClass
+            ORDER BY g2.score DESC
+            LIMIT 1
+        ) as topStudentName,
+        (
+            SELECT g2.score
+            FROM student s2
+            JOIN grades g2 ON s2.studentId = g2.studentId
+            WHERE s2.administrativeClass = s.administrativeClass
+            ORDER BY g2.score DESC
+            LIMIT 1
+        ) as topStudentGrade
+    FROM 
+        student s
+        JOIN grades g ON s.studentId = g.studentId
+    GROUP BY 
+        s.administrativeClass
+    ORDER BY 
+        averageGrade DESC
+  </select>
 
 </mapper>
