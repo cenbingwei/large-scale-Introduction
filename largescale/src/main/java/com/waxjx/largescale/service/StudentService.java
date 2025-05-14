@@ -3,6 +3,7 @@ package com.waxjx.largescale.service;
 import com.waxjx.largescale.dao.GradesMapper;
 import com.waxjx.largescale.dao.StudentMapper;
 import com.waxjx.largescale.model.Student;
+import com.waxjx.largescale.util.JdbcUtil;
 import com.waxjx.largescale.util.StudentSyncUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,7 +18,7 @@ import java.util.Map;
 import java.util.Date;
 
 @Service
-public class StudentService  {
+public class    StudentService  {
 
     @Autowired
     private StudentMapper studentMapper;
@@ -29,6 +30,8 @@ public class StudentService  {
     private Map<String, DataSource> dataSourceMap;
     @Autowired
     private String masterIp;
+    @Autowired
+    private DataSource dataSource;
 
     /**
      * 根据学生 id 查询 学生信息
@@ -47,47 +50,22 @@ public class StudentService  {
      */
     @Transactional
     public int updateStudent(Student student) {
-        int result = studentMapper.updateByPrimaryKeySelective(student);
-        // update 同步其他数据库
-        StudentSyncUtil.syncStudentUpdate(student, dataSourceMap, masterIp);
+        try {
+            String masterUrl = dataSource.getConnection().getMetaData().getURL();
+            masterUrl = JdbcUtil.extractHostFromJdbcUrl(masterUrl);
+            if (masterUrl.equals(masterIp)){
+                int result = studentMapper.updateByPrimaryKeySelective(student);
+                // update 同步其他数据库
+                StudentSyncUtil.syncStudentUpdate(student, dataSourceMap, masterIp);
 
-        // for (Map.Entry<String,DataSource> entry : dataSourceMap.entrySet()) {
-        //     String ip = entry.getKey();
-        //     DataSource ds = entry.getValue();
-        //
-        //     // 主数据库已经处理了，跳过
-        //     if (ip.equals(masterIp)) {
-        //         continue;
-        //     }
-        //
-        //     try (Connection conn = ds.getConnection()){
-        //         PreparedStatement statement = conn.prepareStatement(
-        //                 "update student set studentName = ?, studentTelephone = ?, sex = ?, college = ?, " +
-        //                         "administrativeClass = ?, idNumber = ?, email = ?, studentStatus = ?, " +
-        //                         "educationalSystem = ?, enrollmentDate = ?, major = ? WHERE studentId = ?"
-        //         );
-        //         statement.setString(1, student.getStudentname());
-        //         statement.setString(2, student.getStudenttelephone());
-        //         statement.setShort(3, student.getSex());
-        //         statement.setString(4, student.getCollege());
-        //         statement.setString(5, student.getAdministrativeclass());
-        //         statement.setString(6, student.getIdnumber());
-        //         statement.setString(7, student.getEmail());
-        //         statement.setShort(8, student.getStudentstatus());
-        //         statement.setShort(9, student.getEducationalsystem());
-        //         statement.setDate(10, student.getEnrollmentdate());
-        //         statement.setString(11, student.getMajor());
-        //         statement.setString(12, student.getStudentid());
-        //
-        //         statement.executeUpdate();
-        //
-        //     } catch (SQLException e) {
-        //         System.out.println("其他数据库修改学生数据失败");
-        //
-        //     }
-        // }
-
-        return result;
+                return result;
+            }else {
+                StudentSyncUtil.syncStudentUpdate(student, dataSourceMap, masterIp);
+                return 1;
+            }
+        }catch (Exception e) {
+            return 0;
+        }
     }
 
 
@@ -99,10 +77,18 @@ public class StudentService  {
     @Transactional
     public int insertStudent(Student student) {
         try {
-            int result = studentMapper.insertSelective(student);
-            StudentSyncUtil.syncStudentInsert(student, dataSourceMap, masterIp);
+            String masterUrl = dataSource.getConnection().getMetaData().getURL();
+            masterUrl = JdbcUtil.extractHostFromJdbcUrl(masterUrl);
+            if (masterUrl.equals(masterIp)){
+                int result = studentMapper.insertSelective(student);
+                StudentSyncUtil.syncStudentInsert(student, dataSourceMap, masterIp);
 
-            return result;
+                return result;
+            }else {
+                StudentSyncUtil.syncStudentInsert(student, dataSourceMap, masterIp);
+                return 1;
+            }
+
         }catch (Exception e){
             return 0;
         }
@@ -116,18 +102,37 @@ public class StudentService  {
         /**
          * 先删除对应学生的成绩信息
          */
-        int count = gradesMapper.deleteGradesByStudentId(studentId);
-        // System.out.println(count);
-        // System.out.println("2222222222222222222222222222222222");
+        try {
+            String masterUrl = dataSource.getConnection().getMetaData().getURL();
+            masterUrl = JdbcUtil.extractHostFromJdbcUrl(masterUrl);
+            if (masterUrl.equals(masterIp)){
+                int count = gradesMapper.deleteGradesByStudentId(studentId);
+                // System.out.println(count);
+                // System.out.println("2222222222222222222222222222222222");
 
-        // 同步其他数据库
-        StudentSyncUtil.syncStudentDelete(studentId, dataSourceMap, masterIp);
+                // 同步其他数据库
+                StudentSyncUtil.syncStudentDelete(studentId, dataSourceMap, masterIp);
 
-        return count;
+                return count;
+            }else {
+                StudentSyncUtil.syncStudentDelete(studentId, dataSourceMap, masterIp);
+                return 1;
+            }
+
+        }catch (Exception e) {
+            return 0;
+        }
     }
 
     public List<Student> getStudentByStudentName(String studentName) {
         return studentMapper.selectByStudentName(studentName);
+    }
+
+    public List<Map<String, Object>> selectStudentGradesWithCourseInfo(String studentId) {
+        return studentMapper.selectStudentGradesWithCourseInfo(studentId);
+    }
+    public List<Map<String, Object>> selectClassAverageAndTopStudent(){
+        return studentMapper.selectClassAverageAndTopStudent();
     }
 
 }

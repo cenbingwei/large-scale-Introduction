@@ -3,6 +3,7 @@ package com.waxjx.largescale.service;
 import com.waxjx.largescale.dao.GradesMapper;
 import com.waxjx.largescale.model.Grades;
 import com.waxjx.largescale.util.GradeSyncUtil;
+import com.waxjx.largescale.util.JdbcUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,8 @@ public class GradesService {
     private Map<String, DataSource> dataSourceMap;
     @Autowired
     private String masterIp;
+    @Autowired
+    private DataSource dataSource;
 
     @Transactional
     public int deleteGradesByStudentId(String id) {
@@ -42,10 +45,18 @@ public class GradesService {
     @Transactional
     public int insertGrades(Grades grades) {
         try {
-            int result = gradesMapper.insert(grades);
-            GradeSyncUtil.GradeSyncUtilInsert(grades, dataSourceMap, masterIp);
+            String masterUrl = dataSource.getConnection().getMetaData().getURL();
+            masterUrl = JdbcUtil.extractHostFromJdbcUrl(masterUrl);
+            if (masterUrl.equals(masterIp)){
+                int result = gradesMapper.insert(grades);
+                GradeSyncUtil.GradeSyncUtilInsert(grades, dataSourceMap, masterIp);
 
-            return result;
+                return result;
+            }else {
+                GradeSyncUtil.GradeSyncUtilInsert(grades, dataSourceMap, masterIp);
+                return 1;
+            }
+
         }catch (Exception e) {
             return 0;
         }
@@ -54,18 +65,44 @@ public class GradesService {
 
     @Transactional
     public int updateGradesByStudentIdCourseId(Grades grades){
-        int result = gradesMapper.updateGradesByStudentIdCourseId(grades);
-        GradeSyncUtil.GradeSyncUtilUpdate(grades, dataSourceMap, masterIp);
+        try {
+            String masterUrl = dataSource.getConnection().getMetaData().getURL();
+            masterUrl = JdbcUtil.extractHostFromJdbcUrl(masterUrl);
+            if (masterUrl.equals(masterIp)){
+                int result = gradesMapper.updateGradesByStudentIdCourseId(grades);
+                GradeSyncUtil.GradeSyncUtilUpdate(grades, dataSourceMap, masterIp);
 
-        return result;
+                return result;
+            }else {
+                GradeSyncUtil.GradeSyncUtilUpdate(grades, dataSourceMap, masterIp);
+                return 1;
+            }
+
+        }catch (Exception e) {
+            return 0;
+        }
+
     }
 
     @Transactional
     public int deleteGradesByStudentIdCourseId(String studentId, String courseId){
-        int result = gradesMapper.deleteGradesByStudentIdCourseId(studentId, courseId);
-        GradeSyncUtil.GradeSyncUtilDelete(studentId, courseId, dataSourceMap, masterIp);
+        try {
+            String masterUrl = dataSource.getConnection().getMetaData().getURL();
+            masterUrl = JdbcUtil.extractHostFromJdbcUrl(masterUrl);
+            if (masterUrl.equals(masterIp)){
+                int result = gradesMapper.deleteGradesByStudentIdCourseId(studentId, courseId);
+                GradeSyncUtil.GradeSyncUtilDelete(studentId, courseId, dataSourceMap, masterIp);
 
-        return result;
+                return result;
+            }else {
+                GradeSyncUtil.GradeSyncUtilDelete(studentId, courseId, dataSourceMap, masterIp);
+                return 1;
+            }
+
+        }catch (Exception e) {
+            return 0;
+        }
+
     }
 
 }
